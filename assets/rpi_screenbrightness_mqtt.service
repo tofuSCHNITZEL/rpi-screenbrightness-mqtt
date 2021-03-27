@@ -1,0 +1,14 @@
+[Unit]
+Description=RasPi Sceeen Brightness Control MQTT
+After=network.target
+StartLimitBurst=3
+StartLimitIntervalSec=10
+
+[Service]
+Type=simple
+ExecStart=python3 -u -m rpi_screenbrightness_mqtt.run
+Restart=always
+User=root
+
+[Install]
+WantedBy=multi-user.target
