@@ -3,7 +3,7 @@
 This service can be used to control the backlight of a raspberrypi (touchscreen) e.g. the official 7" touchsceen via mqtt.   
 The default config works with homeassistant if used with the config example for home assistant below. (You just have
 to enter your mqtt broker info)  
-The project uses the supervisord package, so it will run automatically on startup and restart upon error. The script publishes the current 
+The project uses the systemd package, so it will run automatically on startup and restart upon error. The script publishes the current 
 state of power and brightness every 10 seconds.
 
 ## How to install:
@@ -18,9 +18,9 @@ state of power and brightness every 10 seconds.
 
 ## Trouble shooting
 * to enable debug output set "debug" to True or 1 in `/etc/rpi_screenbrightness_mqtt.conf`  
-you can find the logs in `/var/log/supervisor/` and you could use `sudo tail -f /var/log/supervisor/rpi_screenbrightness_mqtt-std*` to display current log
-* you can check the status with `sudo supervisorctl status rpi_screenbrightness_mqtt` or 
-restart the service with ` sudo supervisorctl restart rpi_screenbrightness_mqtt` 
+you can find the logs via `sudo journalctl -u rpi_screenbrightness_mqtt.service'
+* you can check the status with `sudo systemctl status rpi_screenbrightness_mqtt` or 
+restart the service with ` sudo systemctl restart rpi_screenbrightness_mqtt` 
 
 ### Home Assistant config example
 

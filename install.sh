@@ -13,7 +13,7 @@ fi
 
 echo "Installing dependencies..."
 echo "=========================="
-apt update && apt -y install python3 python3-pip git supervisor
+apt update && apt -y install python3 python3-pip git
 
 pip3 install setuptools
 python3 setup.py install --force
@@ -24,9 +24,13 @@ cp ./assets/rpi_screenbrightness_mqtt.conf /etc/rpi_screenbrightness_mqtt.conf
 echo "Configuring service to run on start..."
 echo "==========================================="
 
-cp ./assets/rpi_screenbrightness_mqtt_service.conf /etc/supervisor/conf.d/rpi_screenbrightness_mqtt_service.conf
+cp ./assets/rpi_screenbrightness_mqtt.service /etc/systemd/system/rpi_screenbrightness_mqtt.service
+chmod 644 /etc/systemd/system/rpi_screenbrightness_mqtt.service
 
-service supervisor restart
+systemctl daemon-reload
+systemctl enable rpi_screenbrightness_mqtt.service
+systemctl start rpi_screenbrightness_mqtt.service
+sleep 1
+systemctl status rpi_screenbrightness_mqtt.service
 
-
-echo "Finished!"
+echo "Install finished! If service status above in not active, please troubleshoot"
