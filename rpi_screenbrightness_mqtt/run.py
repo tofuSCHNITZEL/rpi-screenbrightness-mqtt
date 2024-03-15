@@ -75,7 +75,7 @@ class rpiSBmqtt:
         client.publish(self._mqtt_state_topic, payload_power, 0, False)
 
     def run(self):
-        client = mqtt.Client(self._mqtt_clientid)
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION1,self._mqtt_clientid)
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect
