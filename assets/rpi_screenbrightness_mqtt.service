@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=python3 -u -m rpi_screenbrightness_mqtt.run
+ExecStart=/usr/bin/python3 -u -m rpi_screenbrightness_mqtt.run
 Restart=always
 RestartSec=3
 User=root
