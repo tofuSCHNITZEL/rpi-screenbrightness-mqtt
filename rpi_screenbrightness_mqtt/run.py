@@ -3,6 +3,7 @@
 # License: GNU GPLv3, see LICENSE
 
 import configparser,sys, time
+from socket import gethostname
 import paho.mqtt.client as mqtt
 from rpi_backlight import Backlight
 
@@ -18,11 +19,11 @@ class rpiSBmqtt:
         self._mqttuser = self._config.get('mqtt', 'user')
         self._mqttpassword = self._config.get('mqtt', 'password')
         self._mqttconnectedflag = False
-        self._mqtt_state_topic = self._config.get('mqtt', 'state_topic')
-        self._mqtt_command_topic = self._config.get('mqtt', 'command_topic')
-        self._mqtt_brightness_state_topic = self._config.get('mqtt', 'brightness_state_topic')
-        self._mqtt_brightness_command_topic = self._config.get('mqtt', 'brightness_command_topic')
-        self._mqtt_clientid = self._config.get('mqtt', 'clientid')
+        self._mqtt_state_topic = self._config.get('mqtt', 'state_topic').replace('${HOSTNAME}',gethostname())
+        self._mqtt_command_topic = self._config.get('mqtt', 'command_topic').replace('${HOSTNAME}',gethostname())
+        self._mqtt_brightness_state_topic = self._config.get('mqtt', 'brightness_state_topic').replace('${HOSTNAME}',gethostname())
+        self._mqtt_brightness_command_topic = self._config.get('mqtt', 'brightness_command_topic').replace('${HOSTNAME}',gethostname())
+        self._mqtt_clientid = self._config.get('mqtt', 'clientid').replace('${HOSTNAME}',gethostname())
         self._console_output = self._config.getboolean('misc', 'debug')
 
         # initalise backlight object
@@ -38,15 +39,15 @@ class rpiSBmqtt:
         if self._console_output:
             print(message)
 
-    def on_connect(self, client, userdata, flags, rc):
-        if rc == 0:
+    def on_connect(self, client, userdata, flags, reason_code, properties):
+        if reason_code == 0:
             self._print("Connected!")
             self._mqttconnectedflag = True
             client.subscribe(self._mqtt_brightness_command_topic)
             client.subscribe(self._mqtt_command_topic)
         else:
             self._mqttconnectedflag = False
-            self._print("Could not connect. Return code: " + str(rc))
+            self._print("Could not connect. Return code: " + str(reason_code))
 
     def on_message(self, client, userdata, msg):
         payload = str(msg.payload.decode("utf-8"))
@@ -62,8 +63,8 @@ class rpiSBmqtt:
             self._backlight.brightness = int(payload)
             self.sendStatus(client)
 
-    def on_disconnect(self, client, userdata, rc):
-        self._print("disconnected. reason:  " + str(rc))
+    def on_disconnect(self, client, userdata, flags, reason_code, properties):
+        self._print("disconnected. reason:  " + str(reason_code))
         self._mqttconnectedflag = False
 
     def sendStatus(self, client):
@@ -75,7 +76,7 @@ class rpiSBmqtt:
         client.publish(self._mqtt_state_topic, payload_power, 0, False)
 
     def run(self):
-        client = mqtt.Client(self._mqtt_clientid)
+        client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, self._mqtt_clientid)
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect

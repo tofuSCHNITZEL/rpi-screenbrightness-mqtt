@@ -12,7 +12,7 @@ state of power and brightness every 10 seconds.
 `git clone https://github.com/tofuSCHNITZEL/rpi-screenbrightness-mqtt`
 2. run installer  
 `sudo ./rpi-screenbrightness-mqtt/install.sh`
-3. edit config and enter your mqtt broker info and optional change the control and state topics  
+3. edit config and enter your mqtt broker info and optional change the control and state topics  you can use "${HOSTNAME}" in clientid, state_topic, command_topic, brightness_state_topic, brightness_command_topic and it will be replaced by the hostname of the device
 `sudo nano /etc/rpi_screenbrightness_mqtt.conf`
 
 
