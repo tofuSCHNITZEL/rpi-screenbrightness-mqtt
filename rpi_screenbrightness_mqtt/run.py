@@ -1,4 +1,4 @@
-# Copyright 2019 bitconnect
+# Copyright 2024 bitconnect
 # Author: Tobias Perschon
 # License: GNU GPLv3, see LICENSE
 
@@ -6,6 +6,7 @@ import configparser,sys, time
 from socket import gethostname
 import paho.mqtt.client as mqtt
 from rpi_backlight import Backlight
+import json
 
 class rpiSBmqtt:
 
@@ -15,15 +16,17 @@ class rpiSBmqtt:
         if len(self._config.read(config_path)) == 0:
             raise RuntimeError(
                 'Failed to find configuration file at {0}, is the application properly installed?'.format(config_path))
+        self._hostname = gethostname()
         self._mqttbroker = self._config.get('mqtt', 'broker')
         self._mqttuser = self._config.get('mqtt', 'user')
         self._mqttpassword = self._config.get('mqtt', 'password')
         self._mqttconnectedflag = False
-        self._mqtt_state_topic = self._config.get('mqtt', 'state_topic').replace('${HOSTNAME}',gethostname())
-        self._mqtt_command_topic = self._config.get('mqtt', 'command_topic').replace('${HOSTNAME}',gethostname())
-        self._mqtt_brightness_state_topic = self._config.get('mqtt', 'brightness_state_topic').replace('${HOSTNAME}',gethostname())
-        self._mqtt_brightness_command_topic = self._config.get('mqtt', 'brightness_command_topic').replace('${HOSTNAME}',gethostname())
-        self._mqtt_clientid = self._config.get('mqtt', 'clientid').replace('${HOSTNAME}',gethostname())
+        self._mqtt_clientid = self._config.get('mqtt', 'clientid').replace('${HOSTNAME}',self._hostname)
+        self._mqtt_state_topic = self._config.get('mqtt', 'state_topic').replace('${HOSTNAME}',self._hostname)
+        self._mqtt_command_topic = self._config.get('mqtt', 'command_topic').replace('${HOSTNAME}',self._hostname)
+        self._mqtt_brightness_state_topic = self._config.get('mqtt', 'brightness_state_topic').replace('${HOSTNAME}',self._hostname)
+        self._mqtt_brightness_command_topic = self._config.get('mqtt', 'brightness_command_topic').replace('${HOSTNAME}',self._hostname)
+        self._mqtt_discovery_prefix = self._config.get('mqtt', 'discovery_prefix')
         self._console_output = self._config.getboolean('misc', 'debug')
 
         # initalise backlight object
@@ -45,6 +48,8 @@ class rpiSBmqtt:
             self._mqttconnectedflag = True
             client.subscribe(self._mqtt_brightness_command_topic)
             client.subscribe(self._mqtt_command_topic)
+            client.subscribe(f'{self._mqtt_discovery_prefix}/status')
+            self.sendDiscovery(client)
         else:
             self._mqttconnectedflag = False
             self._print("Could not connect. Return code: " + str(reason_code))
@@ -54,14 +59,18 @@ class rpiSBmqtt:
         topic = msg.topic
 
         if topic == self._mqtt_command_topic:
-            self._print("power: "+str(payload))
+            self._print(f'power: {payload}')
             self._backlight.power = True if payload == "ON" else False
             self.sendStatus(client)
 
         if topic == self._mqtt_brightness_command_topic:
-            self._print("brightness: "+str(payload))
+            self._print(f'brightness: {payload}')
             self._backlight.brightness = int(payload)
             self.sendStatus(client)
+
+        if topic == f'{self._mqtt_discovery_prefix}/status':
+            if str(payload) == "online":
+                self.sendDiscovery(client)
 
     def on_disconnect(self, client, userdata, flags, reason_code, properties):
         self._print("disconnected. reason:  " + str(reason_code))
@@ -70,10 +79,29 @@ class rpiSBmqtt:
     def sendStatus(self, client):
         payload_brightness = str(self._backlight.brightness)
         payload_power = "ON" if self._backlight.power else "OFF"
-        self._print("Publishing " + payload_brightness + " to topic: " + self._mqtt_brightness_state_topic + " ...")
+        self._print(f'Publishing {payload_brightness} to topic: {self._mqtt_brightness_state_topic}')
         client.publish(self._mqtt_brightness_state_topic, payload_brightness, 0, False)
-        self._print("Publishing " + payload_power + " to topic: " + self._mqtt_state_topic + " ...")
+        self._print(f'Publishing {payload_power} to topic: {self._mqtt_state_topic}')
         client.publish(self._mqtt_state_topic, payload_power, 0, False)
+
+    def sendDiscovery(self, client):
+        discoveryTopic = f'{self._mqtt_discovery_prefix}/light/{self._mqtt_clientid}/config'
+
+        itemConfig = {
+            "name": self._mqtt_clientid,
+            "unique_id": self._mqtt_clientid,
+            "sw_version": "0.7.0",
+            "suppsort_url": "https://github.com/tofuSCHNITZEL/rpi-screenbrightness-mqtt/issues",
+            "state_topic": f"stat/{self._hostname}/power",
+            "command_topic": f"cmnd/{self._hostname}/power",
+            "brightness_state_topic": f"stat/{self._hostname}/brightness",
+            "brightness_command_topic": f"cmnd/{self._hostname}/brightness",
+            "brightness_scale": 100
+            }
+        
+        self._print(f"Publishing discovery to {discoveryTopic}")
+        client.publish(discoveryTopic, json.dumps(itemConfig), 0, False)
+        self.sendStatus(client)
 
     def run(self):
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, self._mqtt_clientid)
