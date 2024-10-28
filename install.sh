@@ -15,8 +15,7 @@ echo "Installing dependencies..."
 echo "=========================="
 apt update && apt -y install python3 python3-pip git
 
-pip3 install setuptools
-python3 setup.py install --force
+python3 -m pip install .
 
 cp ./assets/rpi_screenbrightness_mqtt.conf /etc/rpi_screenbrightness_mqtt.conf
 

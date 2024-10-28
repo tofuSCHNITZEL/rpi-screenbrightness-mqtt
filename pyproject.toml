@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rpi_screenbrightness_mqtt"
+version = "0.6.0"
+authors = [
+  { name="Tobias Perschon", email="tobias@perschon.at" },
+]
+description = "A simple service that conntects to an mqtt broker so you can control the backlight of an rpi (touch)screen via mqtt (and eg. homeassistant)"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "rpi-backlight==2.6.0",
+    "paho-mqtt==2.1.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/tofuSCHNITZEL/rpi-screenbrightness-mqtt"
+Issues = "https://github.com/tofuSCHNITZEL/rpi-screenbrightness-mqtt/issues"
+
+[tool.pylint.main]
+ignore-patterns = ["^\\.#"]
+
+py-version = "3.11"
+
+[tool.pylint.basic]
+no-docstring-rgx = "^_"
+
+[tool.pylint."messages control"]
+disable = ["too-many-arguments", "too-many-instance-attributes", "raw-checker-failed", "bad-inline-option", "locally-disabled", "file-ignored", "suppressed-message", "useless-suppression", "deprecated-pragma", "use-symbolic-message-instead", "use-implicit-booleaness-not-comparison-to-string", "use-implicit-booleaness-not-comparison-to-zero"]
+
+[tool.pylint.variables]
+ignored-argument-names = "_.*|^ignored_|^unused_"
+
+[tool.setuptools]
+packages = ["rpi_screenbrightness_mqtt"]
