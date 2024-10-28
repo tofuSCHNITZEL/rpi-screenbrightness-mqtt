@@ -16,7 +16,7 @@ state of power and brightness every 10 seconds.
 `sudo nano /etc/rpi_screenbrightness_mqtt.conf`
 
 
-## Trouble shooting
+## Troubleshooting
 * to enable debug output set "debug" to True or 1 in `/etc/rpi_screenbrightness_mqtt.conf`  
 you can find the logs via `sudo journalctl -u rpi_screenbrightness_mqtt.service'
 * you can check the status with `sudo systemctl status rpi_screenbrightness_mqtt` or 
@@ -24,7 +24,9 @@ restart the service with ` sudo systemctl restart rpi_screenbrightness_mqtt`
 
 ### Home Assistant config example
 
-to enable control of the backlight via a homeassistant light use the following configuration:
+since version 0.7.0 the backlight should be automatically added to home assistant via MQTT discovery. Check your entities for something named: "light.rpi_screenbacklight_....."
+
+To add it manually use the following configuration:
 
 ~~~~
 light:
