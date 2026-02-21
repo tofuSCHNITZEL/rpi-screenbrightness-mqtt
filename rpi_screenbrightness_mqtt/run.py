@@ -18,6 +18,8 @@ class rpiSBmqtt:
                 'Failed to find configuration file at {0}, is the application properly installed?'.format(config_path))
         self._hostname = gethostname()
         self._mqttbroker = self._config.get('mqtt', 'broker')
+        self._mqttbroker_port = int(self._config.get('mqtt', 'broker_port'))
+        self._mqttbroker_tls = bool(self._config.get('mqtt', 'broker_tls'))
         self._mqttuser = self._config.get('mqtt', 'user')
         self._mqttpassword = self._config.get('mqtt', 'password')
         self._mqttconnectedflag = False
@@ -105,6 +107,8 @@ class rpiSBmqtt:
 
     def run(self):
         client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, self._mqtt_clientid)
+        if self._mqttbroker_tls:
+            client.tls_set()
         client.on_connect = self.on_connect
         client.on_message = self.on_message
         client.on_disconnect = self.on_disconnect
@@ -112,7 +116,7 @@ class rpiSBmqtt:
         self._print("Connecting to broker "+self._mqttbroker)
         client.loop_start()
         try:
-            client.connect(self._mqttbroker, 1883, 60)
+            client.connect(self._mqttbroker, self._mqttbroker_port, 60)
         except:
             self._print("Connection failed!")
             exit(1)
